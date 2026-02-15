@@ -60,6 +60,8 @@ jobs:
             vim-common \
             pkg-config \
             ca-certificates \
+            libc6-dev \
+            libc6-dev-i386 \
             libcurl4-openssl-dev \
             libfuse-dev \
             liblzma-dev \
