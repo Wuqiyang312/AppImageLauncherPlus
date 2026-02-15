@@ -36,13 +36,18 @@ More information on desktop integration can be found in the [AppImage docs](http
 
 ### AppImage Manager
 
-A graphical management interface to view and manage all integrated AppImages. Features include:
+A graphical management interface to view and manage all integrated AppImages, now integrated into the AppImageLauncher Settings dialog. Features include:
 - **Custom Launch Arguments**: Configure individual launch parameters for each AppImage (stored in `.cfg` files alongside the AppImage)
 - **Desktop Shortcuts**: Right-click to create desktop shortcuts for the current user
 - **Direct Launch**: Run AppImages with configured arguments
 - **Remove**: Completely remove AppImages and their configuration
 
-Launch the manager from your application menu by searching for "AppImage Manager" or run `AppImageLauncherManager` from terminal.
+Access the manager through:
+- The "AppImage Manager" tab in AppImageLauncher Settings
+- Launch "AppImageLauncher Settings" from your application menu and navigate to the manager tab
+- Run `AppImageLauncherSettings` from terminal
+
+Alternatively, you can still use the standalone manager by running `AppImageLauncherManager` from terminal.
 
 
 ### Update management

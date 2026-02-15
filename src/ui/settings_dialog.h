@@ -29,6 +29,14 @@ protected slots:
 
     void onDialogAccepted();
 
+    // AppImage Manager slots
+    void loadAppImages();
+    void showAppImageContextMenu(const QPoint& pos);
+    void editAppImageLaunchArgs();
+    void createAppImageDesktopShortcut();
+    void runSelectedAppImage();
+    void removeSelectedAppImage();
+
 private:
     void loadSettings();
 
@@ -37,6 +45,9 @@ private:
     void toggleDaemon();
 
     void addDirectoryToWatchToListView(const QString& dirPath);
+
+    // AppImage Manager helper
+    QString getSelectedAppImagePath();
 
     Ui::SettingsDialog* ui;
     QSettings* settingsFile;

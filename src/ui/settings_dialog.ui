@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>539</width>
-    <height>459</height>
+    <width>850</width>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="launcherTab">
       <attribute name="title">
@@ -223,6 +223,66 @@
            </layout>
           </item>
          </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="managerTab">
+      <attribute name="title">
+       <string notr="true">AppImage Manager</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_7">
+       <item>
+        <widget class="QLabel" name="managerTitleLabel">
+         <property name="text">
+          <string>Manage Integrated AppImages</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>12</pointsize>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTableWidget" name="appImageTable">
+         <property name="selectionBehavior">
+          <enum>QAbstractItemView::SelectRows</enum>
+         </property>
+         <property name="contextMenuPolicy">
+          <enum>Qt::CustomContextMenu</enum>
+         </property>
+         <column>
+          <property name="text">
+           <string>Name</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Path</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Launch Arguments</string>
+          </property>
+         </column>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="refreshAppImagesButton">
+         <property name="text">
+          <string>Refresh</string>
+         </property>
+         <property name="icon">
+          <iconset theme="view-refresh">
+           <normaloff>.</normaloff>.</iconset>
+         </property>
         </widget>
        </item>
       </layout>

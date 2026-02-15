@@ -18,7 +18,7 @@ endif()
 
 # AppImageLauncherSettings application
 add_executable(AppImageLauncherSettings settings_main.cpp resources.qrc settings_dialog.ui settings_dialog.cpp)
-target_link_libraries(AppImageLauncherSettings shared)
+target_link_libraries(AppImageLauncherSettings shared libappimage)
 
 # set binary runtime rpath to make sure the libappimage.so built and installed by this project is going to be used
 # by the installed binaries (be it the .deb, the AppImage, or whatever)
@@ -32,21 +32,6 @@ install(
     LIBRARY DESTINATION ${_libdir} COMPONENT APPIMAGELAUNCHER
 )
 
-# AppImage Manager application
-add_executable(AppImageLauncherManager manager_main.cpp appimage_manager.cpp appimage_manager.h appimage_manager.ui resources.qrc)
-target_link_libraries(AppImageLauncherManager shared libappimage)
-
-# set binary runtime rpath to make sure the libappimage.so built and installed by this project is going to be used
-# by the installed binaries (be it the .deb, the AppImage, or whatever)
-# in order to make the whole install tree relocatable, a relative path is used
-set_target_properties(AppImageLauncherManager PROPERTIES INSTALL_RPATH ${_rpath})
-
-install(
-    TARGETS
-    AppImageLauncherManager
-    RUNTIME DESTINATION ${_bindir} COMPONENT APPIMAGELAUNCHER
-    LIBRARY DESTINATION ${_libdir} COMPONENT APPIMAGELAUNCHER
-)
 
 # AppImage removal helper
 add_executable(remove remove_main.cpp remove.ui resources.qrc)
