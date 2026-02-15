@@ -32,7 +32,6 @@ protected slots:
     // AppImage Manager slots
     void loadAppImages();
     void showAppImageContextMenu(const QPoint& pos);
-    void editAppImageLaunchArgs();
     void createAppImageDesktopShortcut();
     void runSelectedAppImage();
     void removeSelectedAppImage();

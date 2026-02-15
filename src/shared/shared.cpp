@@ -881,17 +881,6 @@ bool installDesktopFileAndIcons(const QString& pathToAppImage, bool resolveColli
     const auto version = QApplication::applicationVersion().replace("version ", "").toStdString();
     g_key_file_set_string(desktopFile.get(), G_KEY_FILE_DESKTOP_GROUP, "X-AppImageLauncher-Version", version.c_str());
 
-    // Read custom launch arguments from config file and update Exec field
-    QString customArgs = readAppImageLaunchArgs(pathToAppImage);
-    if (!customArgs.isEmpty()) {
-        // Get current Exec value
-        auto* currentExec = g_key_file_get_string(desktopFile.get(), G_KEY_FILE_DESKTOP_GROUP, G_KEY_FILE_DESKTOP_KEY_EXEC, error.get());
-        if (currentExec != nullptr) {
-            QString newExec = QString(currentExec) + " " + customArgs;
-            g_key_file_set_string(desktopFile.get(), G_KEY_FILE_DESKTOP_GROUP, G_KEY_FILE_DESKTOP_KEY_EXEC, newExec.toStdString().c_str());
-        }
-    }
-
     // save desktop file to disk
     if (!g_key_file_save_to_file(desktopFile.get(), desktopFilePath, error.get())) {
         handleError();
@@ -1382,33 +1371,6 @@ void setUpFallbackIconPaths(QWidget* parent) {
     }
 }
 
-QString getAppImageConfigPath(const QString& pathToAppImage) {
-    // Create .cfg file with the same name as the AppImage in the same directory
-    QFileInfo appImageInfo(pathToAppImage);
-    QString configPath = appImageInfo.absolutePath() + "/" + appImageInfo.completeBaseName() + ".cfg";
-    return configPath;
-}
-
-QString readAppImageLaunchArgs(const QString& pathToAppImage) {
-    QString configPath = getAppImageConfigPath(pathToAppImage);
-
-    if (!QFile::exists(configPath)) {
-        return QString();
-    }
-
-    QSettings config(configPath, QSettings::IniFormat);
-    return config.value("Launch/Arguments", "").toString();
-}
-
-bool writeAppImageLaunchArgs(const QString& pathToAppImage, const QString& args) {
-    QString configPath = getAppImageConfigPath(pathToAppImage);
-
-    QSettings config(configPath, QSettings::IniFormat);
-    config.setValue("Launch/Arguments", args);
-    config.sync();
-
-    return config.status() == QSettings::NoError;
-}
 
 QStringList getIntegratedAppImages() {
     QStringList appImages;

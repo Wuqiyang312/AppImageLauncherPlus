@@ -132,14 +132,6 @@ QIcon loadIconWithFallback(const QString& iconName);
 // sets up paths to fallback icons bundled with AppImageLauncher
 void setUpFallbackIconPaths(QWidget*);
 
-// get config file path for an AppImage
-QString getAppImageConfigPath(const QString& pathToAppImage);
-
-// read custom launch arguments from config file
-QString readAppImageLaunchArgs(const QString& pathToAppImage);
-
-// write custom launch arguments to config file
-bool writeAppImageLaunchArgs(const QString& pathToAppImage, const QString& args);
 
 // get list of all integrated AppImages
 QStringList getIntegratedAppImages();

@@ -50,7 +50,6 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent), ui(new Ui::Se
     // Set up AppImage table
     ui->appImageTable->setColumnWidth(0, 200);
     ui->appImageTable->setColumnWidth(1, 350);
-    ui->appImageTable->setColumnWidth(2, 200);
     ui->appImageTable->horizontalHeader()->setStretchLastSection(true);
 
     // Load AppImages initially
@@ -261,21 +260,18 @@ void SettingsDialog::loadAppImages()
     for (const QString& appImagePath : appImages) {
         QFileInfo fileInfo(appImagePath);
         QString name = fileInfo.fileName();
-        QString launchArgs = readAppImageLaunchArgs(appImagePath);
 
         int row = ui->appImageTable->rowCount();
         ui->appImageTable->insertRow(row);
 
         QTableWidgetItem* nameItem = new QTableWidgetItem(name);
         QTableWidgetItem* pathItem = new QTableWidgetItem(appImagePath);
-        QTableWidgetItem* argsItem = new QTableWidgetItem(launchArgs);
 
         // Store full path in user data
         nameItem->setData(Qt::UserRole, appImagePath);
 
         ui->appImageTable->setItem(row, 0, nameItem);
         ui->appImageTable->setItem(row, 1, pathItem);
-        ui->appImageTable->setItem(row, 2, argsItem);
     }
 }
 
@@ -300,7 +296,6 @@ void SettingsDialog::showAppImageContextMenu(const QPoint& pos)
     QMenu contextMenu(tr("Context menu"), this);
 
     QAction* runAction = contextMenu.addAction(tr("Run"));
-    QAction* editArgsAction = contextMenu.addAction(tr("Edit Launch Arguments"));
     QAction* createShortcutAction = contextMenu.addAction(tr("Create Desktop Shortcut"));
     contextMenu.addSeparator();
     QAction* removeAction = contextMenu.addAction(tr("Remove"));
@@ -309,8 +304,6 @@ void SettingsDialog::showAppImageContextMenu(const QPoint& pos)
 
     if (selectedAction == runAction) {
         runSelectedAppImage();
-    } else if (selectedAction == editArgsAction) {
-        editAppImageLaunchArgs();
     } else if (selectedAction == createShortcutAction) {
         createAppImageDesktopShortcut();
     } else if (selectedAction == removeAction) {
@@ -318,34 +311,6 @@ void SettingsDialog::showAppImageContextMenu(const QPoint& pos)
     }
 }
 
-void SettingsDialog::editAppImageLaunchArgs()
-{
-    QString appImagePath = getSelectedAppImagePath();
-    if (appImagePath.isEmpty()) {
-        return;
-    }
-
-    QString currentArgs = readAppImageLaunchArgs(appImagePath);
-
-    bool ok;
-    QString newArgs = QInputDialog::getText(this,
-                                            tr("Edit Launch Arguments"),
-                                            tr("Launch arguments for %1:").arg(QFileInfo(appImagePath).fileName()),
-                                            QLineEdit::Normal,
-                                            currentArgs,
-                                            &ok);
-
-    if (ok) {
-        if (writeAppImageLaunchArgs(appImagePath, newArgs)) {
-            QMessageBox::information(this, tr("Success"),
-                                   tr("Launch arguments saved successfully."));
-            loadAppImages();
-        } else {
-            QMessageBox::critical(this, tr("Error"),
-                                tr("Failed to save launch arguments."));
-        }
-    }
-}
 
 void SettingsDialog::createAppImageDesktopShortcut()
 {
@@ -389,19 +354,7 @@ void SettingsDialog::runSelectedAppImage()
         return;
     }
 
-    QString launchArgs = readAppImageLaunchArgs(appImagePath);
-
-    QStringList arguments;
-    if (!launchArgs.isEmpty()) {
-        // Simple split - doesn't handle quoted strings with spaces
-#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
-        arguments = launchArgs.split(' ', Qt::SkipEmptyParts);
-#else
-        arguments = launchArgs.split(' ', QString::SkipEmptyParts);
-#endif
-    }
-
-    if (QProcess::startDetached(appImagePath, arguments)) {
+    if (QProcess::startDetached(appImagePath, QStringList())) {
         QMessageBox::information(this, tr("Success"),
                                tr("AppImage launched successfully."));
     } else {
@@ -429,9 +382,6 @@ void SettingsDialog::removeSelectedAppImage()
         if (unregisterAppImage(appImagePath)) {
             // Delete the file
             if (QFile::remove(appImagePath)) {
-                // Also remove config file if exists
-                QString configPath = getAppImageConfigPath(appImagePath);
-                QFile::remove(configPath);
 
                 QMessageBox::information(this, tr("Success"),
                                        tr("AppImage removed successfully."));

@@ -267,11 +267,6 @@
            <string>Path</string>
           </property>
          </column>
-         <column>
-          <property name="text">
-           <string>Launch Arguments</string>
-          </property>
-         </column>
         </widget>
        </item>
        <item>
