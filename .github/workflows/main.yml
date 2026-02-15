@@ -51,7 +51,7 @@ jobs:
             cmake \
             clang \
             g++ \
-            libstdc++-dev \
+            libstdc++-12-dev \
             git \
             automake \
             autoconf \
