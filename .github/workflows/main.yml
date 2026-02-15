@@ -9,26 +9,27 @@ jobs:
       matrix:
         include:
           - NAME: Packages x86_64
-            RUNS_ON: ubuntu-24.04
+            RUNS_ON: ubuntu-22.04
             DOCKER_PLATFORM: linux/amd64
-          - NAME: Packages aarch64
-            RUNS_ON: ubuntu-24.04-arm
-            DOCKER_PLATFORM: linux/arm64/v8
-          - NAME: Packages armhf
-            RUNS_ON: ubuntu-24.04-arm
-            DOCKER_PLATFORM: linux/arm/v7
+          # TODO: Re-enable ARM builds once x86_64 build is stable
+          # - NAME: Packages aarch64
+          #   RUNS_ON: ubuntu-latest-arm64
+          #   DOCKER_PLATFORM: linux/arm64/v8
+          # - NAME: Packages armhf
+          #   RUNS_ON: ubuntu-latest-arm64
+          #   DOCKER_PLATFORM: linux/arm/v7
           - NAME: Lite AppImage x86_64
-            RUNS_ON: ubuntu-24.04
+            RUNS_ON: ubuntu-22.04
             DOCKER_PLATFORM: linux/amd64
             BUILD_LITE: 1
-          - NAME: Lite AppImage aarch64
-            RUNS_ON: ubuntu-24.04-arm
-            DOCKER_PLATFORM: linux/arm64/v8
-            BUILD_LITE: 1
-          - NAME: Lite AppImage armhf
-            RUNS_ON: ubuntu-24.04-arm
-            DOCKER_PLATFORM: linux/arm/v7
-            BUILD_LITE: 1
+          # - NAME: Lite AppImage aarch64
+          #   RUNS_ON: ubuntu-latest-arm64
+          #   DOCKER_PLATFORM: linux/arm64/v8
+          #   BUILD_LITE: 1
+          # - NAME: Lite AppImage armhf
+          #   RUNS_ON: ubuntu-latest-arm64
+          #   DOCKER_PLATFORM: linux/arm/v7
+          #   BUILD_LITE: 1
 
     name: ${{ matrix.NAME }}
     env:
@@ -81,6 +82,10 @@ jobs:
             qttools5-dev \
             qttools5-dev-tools \
             libqt5svg5-dev \
+            qml-module-qtquick2 \
+            qml-module-qtquick-controls2 \
+            qml-module-qtquick-dialogs \
+            qml-module-qtquick-layouts \
             desktop-file-utils \
             zsync \
             file \
@@ -92,6 +97,13 @@ jobs:
 
       - name: Build project
         run: bash -ex ci/build.sh
+
+      - name: Show build errors if failed
+        if: failure()
+        run: |
+          echo "=== Build failed. Checking for error logs ==="
+          find /dev/shm -name "*.log" 2>/dev/null || true
+          find /tmp -name "CMakeError.log" 2>/dev/null -exec cat {} \; || true
 
       - name: Archive artifacts
         uses: actions/upload-artifact@v6
