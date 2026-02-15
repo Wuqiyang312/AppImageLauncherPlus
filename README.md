@@ -34,6 +34,17 @@ AppImages use the term "desktop integration", as they're not "installed" in the 
 More information on desktop integration can be found in the [AppImage docs](https://docs.appimage.org/reference/desktop-integration.html).
 
 
+### AppImage Manager
+
+A graphical management interface to view and manage all integrated AppImages. Features include:
+- **Custom Launch Arguments**: Configure individual launch parameters for each AppImage (stored in `.cfg` files alongside the AppImage)
+- **Desktop Shortcuts**: Right-click to create desktop shortcuts for the current user
+- **Direct Launch**: Run AppImages with configured arguments
+- **Remove**: Completely remove AppImages and their configuration
+
+Launch the manager from your application menu by searching for "AppImage Manager" or run `AppImageLauncherManager` from terminal.
+
+
 ### Update management
 
 After desktop integration, the context menu of the AppImage's entry in the application launcher will have an "Update" entry that launches a little helper tool to apply updates.
@@ -43,6 +54,19 @@ After desktop integration, the context menu of the AppImage's entry in the appli
 
 Click the "Remove" entry in the context menu in the application launcher and the removal tool will ask you to confirm.
 If you choose to do so, the desktop integration is undone, and the file is removed from your system.
+
+
+### Custom Launch Arguments
+
+Each integrated AppImage can have custom launch arguments configured through the AppImage Manager. Arguments are stored in a `.cfg` file next to the AppImage:
+- Config file format: INI format with arguments in `[Launch]` section under `Arguments` key
+- Example: For `~/Applications/MyApp.AppImage`, config is stored in `~/Applications/MyApp.cfg`
+- Config file example:
+  ```ini
+  [Launch]
+  Arguments=--some-option value --another-flag
+  ```
+- Simply running an AppImage does not create the config file automatically - use the AppImage Manager to configure arguments
 
 
 ### CLI
