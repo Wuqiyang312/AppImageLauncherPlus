@@ -35,19 +35,44 @@ jobs:
       DOCKER_PLATFORM: ${{ matrix.DOCKER_PLATFORM }}
       DIST: ${{ matrix.DIST }}
       BUILD_LITE: ${{ matrix.BUILD_LITE }}
+      CI: 1
     runs-on: ${{ matrix.RUNS_ON }}
     steps:
       - uses: actions/checkout@v6
         with:
           submodules: 'recursive'
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build in Docker
-        run: bash -ex ci/build-in-docker.sh
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            clang \
+            git \
+            libcairo2-dev \
+            libfuse-dev \
+            liblzma-dev \
+            libglib2.0-dev \
+            libboost-filesystem-dev \
+            libssl-dev \
+            libcurl4-openssl-dev \
+            qtbase5-dev \
+            qttools5-dev \
+            qttools5-dev-tools \
+            libqt5svg5-dev \
+            desktop-file-utils \
+            zsync \
+            wget \
+            file \
+            patchelf \
+            dpkg-dev \
+            rpm \
+            qtchooser
+
+      - name: Build project
+        run: bash -ex ci/build.sh
+
       - name: Archive artifacts
         uses: actions/upload-artifact@v6
         with:
