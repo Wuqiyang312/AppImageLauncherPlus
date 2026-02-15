@@ -89,7 +89,6 @@ packages=(
 
     qtbase5-dev
     qt5-qmake
-    qtdeclarative5-dev
 
     # libappimage
     libgcrypt-dev
@@ -107,6 +106,11 @@ packages=(
 export DEBIAN_FRONTEND=noninteractive
 
 apt-get -y --no-install-recommends install "${packages[@]}"
+
+# Qt Quick/QML packages are only needed for the full version (update helper UI)
+if [[ "${BUILD_LITE:-}" == "" ]]; then
+    apt-get -y --no-install-recommends install qtdeclarative5-dev
+fi
 
 # install more recent CMake and patchelf
 cmake_arch="$(dpkg --print-architecture)"

@@ -82,14 +82,9 @@ jobs:
             libzstd-dev \
             qtbase5-dev \
             qt5-qmake \
-            qtdeclarative5-dev \
             qttools5-dev \
             qttools5-dev-tools \
             libqt5svg5-dev \
-            qml-module-qtquick2 \
-            qml-module-qtquick-controls2 \
-            qml-module-qtquick-dialogs \
-            qml-module-qtquick-layouts \
             desktop-file-utils \
             zsync \
             file \
@@ -98,6 +93,16 @@ jobs:
             rpm \
             rpm2cpio \
             qtchooser
+
+      - name: Install Qt Quick/QML packages (full version only)
+        if: matrix.BUILD_LITE != '1'
+        run: |
+          sudo apt-get install -y \
+            qtdeclarative5-dev \
+            qml-module-qtquick2 \
+            qml-module-qtquick-controls2 \
+            qml-module-qtquick-dialogs \
+            qml-module-qtquick-layouts
 
       - name: Build project
         run: bash -ex ci/build.sh

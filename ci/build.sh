@@ -160,8 +160,15 @@ if [[ "${BUILD_LITE:-}" == "" ]]; then
     export LDNP_RPM_SCRIPTLET_PREUN="${BUILD_DIR}/cmake/debian/postrm"
 
     # updater is not available for the lite build
+    UPDATE_BINARY="$(find AppDir/usr/lib/*/appimagelauncher/update | head -n1)"
+    if [[ ! -f "$UPDATE_BINARY" ]]; then
+        echo "Error: update binary not found at expected location"
+        find AppDir -name update || true
+        exit 1
+    fi
+
     linuxdeploy_extra_args+=(
-        -e "$(find AppDir/usr/lib/*/appimagelauncher/update | head -n1)"
+        -e "$UPDATE_BINARY"
         --output native_packages
     )
 
