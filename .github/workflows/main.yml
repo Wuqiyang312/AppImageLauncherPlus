@@ -50,6 +50,8 @@ jobs:
             build-essential \
             cmake \
             clang \
+            g++ \
+            libstdc++-dev \
             git \
             automake \
             autoconf \
