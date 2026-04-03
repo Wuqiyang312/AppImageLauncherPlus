@@ -136,3 +136,25 @@ void setUpFallbackIconPaths(QWidget*);
 // get list of all integrated AppImages
 QStringList getIntegratedAppImages();
 
+// get path to AppImage config file (.cfg)
+QString getAppImageConfigFilePath(const QString& pathToAppImage);
+
+// read launch arguments from AppImage config file
+QString readAppImageLaunchArguments(const QString& pathToAppImage);
+
+// write launch arguments to AppImage config file
+bool writeAppImageLaunchArguments(const QString& pathToAppImage, const QString& arguments);
+
+// delete AppImage config file
+bool deleteAppImageConfigFile(const QString& pathToAppImage);
+
+// check if AppImage has config file
+bool hasAppImageConfigFile(const QString& pathToAppImage);
+
+// get AppImage internal desktop file content as map
+// keys: Name, Exec, Icon, Comment, Categories, etc.
+QMap<QString, QString> getAppImageDesktopFileInfo(const QString& pathToAppImage);
+
+// get AppImage icon path (extracted from AppImage or registered desktop file)
+QString getAppImageIconPath(const QString& pathToAppImage);
+

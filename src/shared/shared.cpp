@@ -1372,6 +1372,156 @@ void setUpFallbackIconPaths(QWidget* parent) {
 }
 
 
+// get path to AppImage config file (.cfg)
+QString getAppImageConfigFilePath(const QString& pathToAppImage) {
+    QFileInfo fileInfo(pathToAppImage);
+    QString configPath = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".cfg";
+    return configPath;
+}
+
+// read launch arguments from AppImage config file
+QString readAppImageLaunchArguments(const QString& pathToAppImage) {
+    QString configPath = getAppImageConfigFilePath(pathToAppImage);
+    QSettings config(configPath, QSettings::IniFormat);
+    return config.value("Launch/Arguments", "").toString();
+}
+
+// write launch arguments to AppImage config file
+bool writeAppImageLaunchArguments(const QString& pathToAppImage, const QString& arguments) {
+    QString configPath = getAppImageConfigFilePath(pathToAppImage);
+    QSettings config(configPath, QSettings::IniFormat);
+    config.setValue("Launch/Arguments", arguments);
+    config.sync();
+    return config.status() == QSettings::NoError;
+}
+
+// delete AppImage config file
+bool deleteAppImageConfigFile(const QString& pathToAppImage) {
+    QString configPath = getAppImageConfigFilePath(pathToAppImage);
+    if (QFile::exists(configPath)) {
+        return QFile::remove(configPath);
+    }
+    return true; // File doesn't exist, consider it success
+}
+
+// check if AppImage has config file
+bool hasAppImageConfigFile(const QString& pathToAppImage) {
+    QString configPath = getAppImageConfigFilePath(pathToAppImage);
+    return QFile::exists(configPath);
+}
+
+// get AppImage internal desktop file content as map
+QMap<QString, QString> getAppImageDesktopFileInfo(const QString& pathToAppImage) {
+    QMap<QString, QString> info;
+    
+    // First try to get the registered desktop file path
+    const char* desktopFilePath = appimage_registered_desktop_file_path(
+        pathToAppImage.toStdString().c_str(), nullptr, false);
+    
+    if (desktopFilePath && QFile::exists(desktopFilePath)) {
+        std::shared_ptr<GKeyFile> desktopFile(g_key_file_new(), gKeyFileDeleter);
+        std::shared_ptr<GError*> error(nullptr, gErrorDeleter);
+        
+        if (g_key_file_load_from_file(desktopFile.get(), desktopFilePath, G_KEY_FILE_NONE, error.get())) {
+            // Read common desktop entry keys
+            const char* keys[] = {
+                G_KEY_FILE_DESKTOP_KEY_NAME,
+                G_KEY_FILE_DESKTOP_KEY_EXEC,
+                G_KEY_FILE_DESKTOP_KEY_ICON,
+                G_KEY_FILE_DESKTOP_KEY_COMMENT,
+                G_KEY_FILE_DESKTOP_KEY_CATEGORIES,
+                G_KEY_FILE_DESKTOP_KEY_TERMINAL,
+                G_KEY_FILE_DESKTOP_KEY_TYPE,
+                "StartupWMClass",
+                "MimeType",
+                "Version"
+            };
+            
+            for (const auto* key : keys) {
+                char* value = g_key_file_get_string(desktopFile.get(), 
+                    G_KEY_FILE_DESKTOP_GROUP, key, error.get());
+                if (value) {
+                    info[QString(key)] = QString(value);
+                    g_free(value);
+                }
+            }
+        }
+    }
+    
+    // If no desktop file info found, try to extract from AppImage directly
+    if (info.isEmpty()) {
+        // Try to read .desktop file from AppImage using libappimage
+        char** fileList = appimage_list_files(pathToAppImage.toStdString().c_str());
+        if (fileList) {
+            QString desktopFileInternalPath;
+            for (int i = 0; fileList[i] != nullptr; i++) {
+                QString filePath(fileList[i]);
+                // Look for .desktop file in root or usr/share/applications
+                if (filePath.endsWith(".desktop") && 
+                    (filePath.startsWith("/") || filePath.contains("/applications/"))) {
+                    desktopFileInternalPath = filePath;
+                    break;
+                }
+            }
+            g_strfreev(fileList);
+            
+            if (!desktopFileInternalPath.isEmpty()) {
+                // Extract and read the desktop file
+                // Note: This would require appimage_read_file or similar function
+                // For now, we at least set the app name from the filename
+                QFileInfo fileInfo(pathToAppImage);
+                info[G_KEY_FILE_DESKTOP_KEY_NAME] = fileInfo.completeBaseName();
+            }
+        }
+    }
+    
+    return info;
+}
+
+// get AppImage icon path
+QString getAppImageIconPath(const QString& pathToAppImage) {
+    // Try to get from registered desktop file first
+    const char* desktopFilePath = appimage_registered_desktop_file_path(
+        pathToAppImage.toStdString().c_str(), nullptr, false);
+    
+    if (desktopFilePath && QFile::exists(desktopFilePath)) {
+        std::shared_ptr<GKeyFile> desktopFile(g_key_file_new(), gKeyFileDeleter);
+        std::shared_ptr<GError*> error(nullptr, gErrorDeleter);
+        
+        if (g_key_file_load_from_file(desktopFile.get(), desktopFilePath, G_KEY_FILE_NONE, error.get())) {
+            char* iconName = g_key_file_get_string(desktopFile.get(), 
+                G_KEY_FILE_DESKTOP_GROUP, G_KEY_FILE_DESKTOP_KEY_ICON, error.get());
+            if (iconName) {
+                QString iconPath(iconName);
+                g_free(iconName);
+                
+                // Check if it's an absolute path
+                if (QFile::exists(iconPath)) {
+                    return iconPath;
+                }
+                
+                // Otherwise, look in standard icon directories
+                QStringList iconDirs;
+                iconDirs << QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/icons/hicolor/";
+                
+                for (const auto& dirPath : iconDirs) {
+                    QDirIterator it(dirPath, QDirIterator::Subdirectories);
+                    while (it.hasNext()) {
+                        QString filePath = it.next();
+                        QFileInfo fileInfo(filePath);
+                        if (fileInfo.completeBaseName() == iconPath || 
+                            fileInfo.fileName().startsWith(iconPath)) {
+                            return filePath;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    return QString();
+}
+
 QStringList getIntegratedAppImages() {
     QStringList appImages;
 
