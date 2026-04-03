@@ -6,9 +6,14 @@ AppImageLauncherPlus 是一款让你的 Linux 桌面原生支持 AppImage 应用
 ## 主要功能
 - **桌面集成**：自动将 AppImage 添加到应用菜单/启动器，并集中管理。
 - **AppImage 管理器**：图形化管理界面，可查看所有已集成的 AppImage，支持：
-  - 自定义启动参数：为每个 AppImage 配置独立的启动参数
-  - 创建桌面快捷方式：右键创建当前用户的桌面启动项
-  - 直接运行、移除 AppImage
+  - **搜索过滤**：按名称、版本或路径快速查找 AppImage
+  - **元数据显示**：显示文件大小、版本、修改日期等详细信息
+  - **自定义启动参数**：为每个 AppImage 配置独立的启动参数
+  - **创建桌面快捷方式**：右键创建当前用户的桌面启动项
+  - **直接运行**：使用配置的参数直接运行 AppImage
+  - **打开所在位置**：在文件管理器中打开 AppImage 所在目录
+  - **删除配置**：仅删除配置文件，保留 AppImage 文件
+  - **移除应用**：彻底删除 AppImage 及其配置
 - **更新管理**：集成后可直接在菜单中一键更新 AppImage。
 - **移除管理**：支持从系统中彻底移除 AppImage 及其集成信息。
 - **命令行工具**：提供 `ail-cli`，支持集成/去集成等自动化操作。
@@ -45,12 +50,21 @@ AppImageLauncherPlus 是一款让你的 Linux 桌面原生支持 AppImage 应用
 - **双击 AppImage 文件**：首次运行会弹窗提示是否集成到系统，选择后自动移动并集成。
 - **应用菜单管理**：集成后可在菜单中直接启动、更新或移除 AppImage。
 - **AppImage 管理器**：
-  - 启动方式：在应用菜单中搜索"AppImage Manager"或运行 `AppImageLauncherManager` 命令
-  - 查看所有已集成的 AppImage
-  - 右键菜单支持：
-    - **编辑启动参数**：为 AppImage 设置独立的启动参数（保存在同名 .cfg 文件中）
-    - **创建桌面快捷方式**：在桌面创建当前用户的启动项
+  - 启动方式：在应用菜单中搜索"AppImage Settings"或运行 `AppImageLauncherSettings` 命令，切换到"AppImage Manager"标签页
+  - 查看所有已集成的 AppImage，显示名称、版本、文件大小和路径
+  - **搜索框**：输入关键词快速过滤 AppImage 列表
+  - **工具栏按钮**：
+    - **运行**：直接启动选中的 AppImage
+    - **编辑参数**：配置启动参数（创建/编辑 .cfg 配置文件）
+    - **删除配置**：删除该 AppImage 的自定义配置文件
+    - **打开位置**：在文件管理器中打开 AppImage 所在文件夹
+    - **刷新**：刷新 AppImage 列表
+  - **右键菜单支持**：
     - **运行**：使用配置的参数直接运行 AppImage
+    - **创建桌面快捷方式**：在桌面创建当前用户的启动项
+    - **打开文件位置**：在文件管理器中打开 AppImage 所在目录
+    - **编辑启动参数**：为 AppImage 设置独立的启动参数（保存在同名 .cfg 文件中）
+    - **删除配置文件**：仅删除配置文件，保留 AppImage
     - **移除**：彻底删除 AppImage 及其配置
 - **命令行工具**：使用 `ail-cli` 进行批量集成/去集成等操作。
 
@@ -64,6 +78,7 @@ AppImageLauncherPlus 是一款让你的 Linux 桌面原生支持 AppImage 应用
   Arguments=--some-option value --another-flag
   ```
 - 只运行 AppImage 不会自动创建配置文件，需要通过 AppImage 管理器手动配置
+- **删除配置**：在 AppImage 管理器中选择"删除配置"可删除 .cfg 文件，恢复默认启动方式
 
 ## 依赖说明
 - 主要依赖：glib2、cairo、librsvg、fuse、libarchive、libXpm、qt5、libcurl、boost 等。
