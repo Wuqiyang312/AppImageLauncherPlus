@@ -250,6 +250,20 @@
         </widget>
        </item>
        <item>
+        <layout class="QHBoxLayout" name="searchLayout">
+         <item>
+          <widget class="QLineEdit" name="searchLineEdit">
+           <property name="placeholderText">
+            <string>Search AppImages...</string>
+           </property>
+           <property name="clearButtonEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
         <widget class="QTableWidget" name="appImageTable">
          <property name="selectionBehavior">
           <enum>QAbstractItemView::SelectRows</enum>
@@ -264,21 +278,86 @@
          </column>
          <column>
           <property name="text">
+           <string>Version</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Size</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
            <string>Path</string>
           </property>
          </column>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="refreshAppImagesButton">
-         <property name="text">
-          <string>Refresh</string>
-         </property>
-         <property name="icon">
-          <iconset theme="view-refresh">
-           <normaloff>.</normaloff>.</iconset>
-         </property>
-        </widget>
+        <layout class="QHBoxLayout" name="managerButtonsLayout">
+         <item>
+          <widget class="QPushButton" name="runAppImageButton">
+           <property name="text">
+            <string>Run</string>
+           </property>
+           <property name="icon">
+            <iconset theme="media-playback-start">
+             <normaloff>.</normaloff>.</iconset>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="editArgsButton">
+           <property name="text">
+            <string>Edit Arguments</string>
+           </property>
+           <property name="icon">
+            <iconset theme="document-edit">
+             <normaloff>.</normaloff>.</iconset>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="deleteConfigButton">
+           <property name="text">
+            <string>Delete Config</string>
+           </property>
+           <property name="icon">
+            <iconset theme="edit-delete">
+             <normaloff>.</normaloff>.</iconset>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="openLocationButton">
+           <property name="text">
+            <string>Open Location</string>
+           </property>
+           <property name="icon">
+            <iconset theme="folder-open">
+             <normaloff>.</normaloff>.</iconset>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="refreshAppImagesButton">
+           <property name="text">
+            <string>Refresh</string>
+           </property>
+           <property name="icon">
+            <iconset theme="view-refresh">
+             <normaloff>.</normaloff>.</iconset>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </widget>

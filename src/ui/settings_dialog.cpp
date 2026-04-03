@@ -47,10 +47,24 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent), ui(new Ui::Se
     connect(ui->appImageTable, &QTableWidget::customContextMenuRequested,
             this, &SettingsDialog::showAppImageContextMenu);
 
+    // New button connections
+    connect(ui->runAppImageButton, &QPushButton::clicked, this, &SettingsDialog::runSelectedAppImage);
+    connect(ui->editArgsButton, &QPushButton::clicked, this, &SettingsDialog::editAppImageLaunchArguments);
+    connect(ui->deleteConfigButton, &QPushButton::clicked, this, &SettingsDialog::deleteAppImageConfig);
+    connect(ui->openLocationButton, &QPushButton::clicked, this, &SettingsDialog::openAppImageLocation);
+    
+    // Search functionality
+    connect(ui->searchLineEdit, &QLineEdit::textChanged, this, [this](const QString& text) {
+        filterAppImages(text);
+    });
+
     // Set up AppImage table
     ui->appImageTable->setColumnWidth(0, 200);
-    ui->appImageTable->setColumnWidth(1, 350);
+    ui->appImageTable->setColumnWidth(1, 100);
+    ui->appImageTable->setColumnWidth(2, 100);
     ui->appImageTable->horizontalHeader()->setStretchLastSection(true);
+    ui->appImageTable->setSelectionMode(QAbstractItemView::SingleSelection);
+    ui->appImageTable->setAlternatingRowColors(true);
 
     // Load AppImages initially
     loadAppImages();
@@ -260,18 +274,59 @@ void SettingsDialog::loadAppImages()
     for (const QString& appImagePath : appImages) {
         QFileInfo fileInfo(appImagePath);
         QString name = fileInfo.fileName();
+        
+        // Get desktop file info for version
+        auto desktopInfo = getAppImageDesktopFileInfo(appImagePath);
+        QString version = desktopInfo.value("X-AppImage-Version", desktopInfo.value("Version", "-"));
+        
+        // Format file size
+        QString sizeStr;
+        qint64 size = fileInfo.size();
+        if (size < 1024 * 1024) {
+            sizeStr = QString::number(size / 1024.0, 'f', 1) + " KB";
+        } else if (size < 1024 * 1024 * 1024) {
+            sizeStr = QString::number(size / (1024.0 * 1024.0), 'f', 1) + " MB";
+        } else {
+            sizeStr = QString::number(size / (1024.0 * 1024.0 * 1024.0), 'f', 2) + " GB";
+        }
 
         int row = ui->appImageTable->rowCount();
         ui->appImageTable->insertRow(row);
 
         QTableWidgetItem* nameItem = new QTableWidgetItem(name);
+        QTableWidgetItem* versionItem = new QTableWidgetItem(version);
+        QTableWidgetItem* sizeItem = new QTableWidgetItem(sizeStr);
         QTableWidgetItem* pathItem = new QTableWidgetItem(appImagePath);
 
         // Store full path in user data
         nameItem->setData(Qt::UserRole, appImagePath);
 
         ui->appImageTable->setItem(row, 0, nameItem);
-        ui->appImageTable->setItem(row, 1, pathItem);
+        ui->appImageTable->setItem(row, 1, versionItem);
+        ui->appImageTable->setItem(row, 2, sizeItem);
+        ui->appImageTable->setItem(row, 3, pathItem);
+    }
+    
+    // Update button states
+    bool hasSelection = ui->appImageTable->currentRow() >= 0;
+    ui->runAppImageButton->setEnabled(hasSelection);
+    ui->editArgsButton->setEnabled(hasSelection);
+    ui->deleteConfigButton->setEnabled(hasSelection);
+    ui->openLocationButton->setEnabled(hasSelection);
+}
+
+void SettingsDialog::filterAppImages(const QString& filter)
+{
+    for (int row = 0; row < ui->appImageTable->rowCount(); ++row) {
+        bool match = false;
+        for (int col = 0; col < ui->appImageTable->columnCount(); ++col) {
+            QTableWidgetItem* item = ui->appImageTable->item(row, col);
+            if (item && item->text().contains(filter, Qt::CaseInsensitive)) {
+                match = true;
+                break;
+            }
+        }
+        ui->appImageTable->setRowHidden(row, !match);
     }
 }
 
@@ -283,7 +338,7 @@ QString SettingsDialog::getSelectedAppImagePath()
     }
 
     int row = selectedItems.first()->row();
-    return ui->appImageTable->item(row, 1)->text();
+    return ui->appImageTable->item(row, 3)->text();
 }
 
 void SettingsDialog::showAppImageContextMenu(const QPoint& pos)
@@ -293,10 +348,23 @@ void SettingsDialog::showAppImageContextMenu(const QPoint& pos)
         return;
     }
 
+    QString appImagePath = getSelectedAppImagePath();
+    if (appImagePath.isEmpty()) {
+        return;
+    }
+
     QMenu contextMenu(tr("Context menu"), this);
 
     QAction* runAction = contextMenu.addAction(tr("Run"));
     QAction* createShortcutAction = contextMenu.addAction(tr("Create Desktop Shortcut"));
+    QAction* openLocationAction = contextMenu.addAction(tr("Open File Location"));
+    contextMenu.addSeparator();
+    
+    QAction* editArgsAction = contextMenu.addAction(tr("Edit Launch Arguments"));
+    bool hasConfig = hasAppImageConfigFile(appImagePath);
+    QAction* deleteConfigAction = contextMenu.addAction(hasConfig ? tr("Delete Config File") : tr("Delete Config File (none)"));
+    deleteConfigAction->setEnabled(hasConfig);
+    
     contextMenu.addSeparator();
     QAction* removeAction = contextMenu.addAction(tr("Remove"));
 
@@ -306,6 +374,12 @@ void SettingsDialog::showAppImageContextMenu(const QPoint& pos)
         runSelectedAppImage();
     } else if (selectedAction == createShortcutAction) {
         createAppImageDesktopShortcut();
+    } else if (selectedAction == openLocationAction) {
+        openAppImageLocation();
+    } else if (selectedAction == editArgsAction) {
+        editAppImageLaunchArguments();
+    } else if (selectedAction == deleteConfigAction) {
+        deleteAppImageConfig();
     } else if (selectedAction == removeAction) {
         removeSelectedAppImage();
     }
@@ -378,6 +452,9 @@ void SettingsDialog::removeSelectedAppImage()
                                       QMessageBox::Yes | QMessageBox::No);
 
     if (reply == QMessageBox::Yes) {
+        // Delete config file first
+        deleteAppImageConfigFile(appImagePath);
+        
         // Unregister AppImage
         if (unregisterAppImage(appImagePath)) {
             // Delete the file
@@ -395,5 +472,124 @@ void SettingsDialog::removeSelectedAppImage()
                                 tr("Failed to unregister AppImage."));
         }
     }
+}
+
+void SettingsDialog::editAppImageLaunchArguments()
+{
+    QString appImagePath = getSelectedAppImagePath();
+    if (appImagePath.isEmpty()) {
+        return;
+    }
+
+    QString currentArgs = readAppImageLaunchArguments(appImagePath);
+    
+    bool ok;
+    QString newArgs = QInputDialog::getText(this, tr("Edit Launch Arguments"),
+                                           tr("Enter launch arguments for %1:\n\n"
+                                              "Example: --enable-feature --option=value")
+                                           .arg(QFileInfo(appImagePath).fileName()),
+                                           QLineEdit::Normal, currentArgs, &ok);
+    
+    if (ok) {
+        if (newArgs.trimmed().isEmpty()) {
+            // If empty, delete the config file
+            if (hasAppImageConfigFile(appImagePath)) {
+                if (deleteAppImageConfigFile(appImagePath)) {
+                    QMessageBox::information(this, tr("Success"),
+                                           tr("Launch arguments cleared and config file deleted."));
+                } else {
+                    QMessageBox::warning(this, tr("Warning"),
+                                       tr("Failed to delete config file."));
+                }
+            }
+        } else {
+            // Save the arguments
+            if (writeAppImageLaunchArguments(appImagePath, newArgs)) {
+                QMessageBox::information(this, tr("Success"),
+                                       tr("Launch arguments saved successfully."));
+            } else {
+                QMessageBox::critical(this, tr("Error"),
+                                    tr("Failed to save launch arguments."));
+            }
+        }
+    }
+}
+
+void SettingsDialog::deleteAppImageConfig()
+{
+    QString appImagePath = getSelectedAppImagePath();
+    if (appImagePath.isEmpty()) {
+        return;
+    }
+
+    if (!hasAppImageConfigFile(appImagePath)) {
+        QMessageBox::information(this, tr("Info"),
+                               tr("No config file exists for this AppImage."));
+        return;
+    }
+
+    auto reply = QMessageBox::question(this, tr("Confirm Delete Config"),
+                                      tr("Are you sure you want to delete the config file for %1?\n"
+                                         "This will remove any custom launch arguments.")
+                                      .arg(QFileInfo(appImagePath).fileName()),
+                                      QMessageBox::Yes | QMessageBox::No);
+
+    if (reply == QMessageBox::Yes) {
+        if (deleteAppImageConfigFile(appImagePath)) {
+            QMessageBox::information(this, tr("Success"),
+                                   tr("Config file deleted successfully."));
+        } else {
+            QMessageBox::critical(this, tr("Error"),
+                                tr("Failed to delete config file."));
+        }
+    }
+}
+
+void SettingsDialog::showAppImageDetails()
+{
+    QString appImagePath = getSelectedAppImagePath();
+    if (appImagePath.isEmpty()) {
+        return;
+    }
+
+    QFileInfo fileInfo(appImagePath);
+    auto desktopInfo = getAppImageDesktopFileInfo(appImagePath);
+    
+    QString details = tr("<h2>%1</h2>"
+                        "<table>"
+                        "<tr><td><b>Path:</b></td><td>%2</td></tr>"
+                        "<tr><td><b>Size:</b></td><td>%3</td></tr>"
+                        "<tr><td><b>Modified:</b></td><td>%4</td></tr>"
+                        "<tr><td><b>Name:</b></td><td>%5</td></tr>"
+                        "<tr><td><b>Version:</b></td><td>%6</td></tr>"
+                        "<tr><td><b>Comment:</b></td><td>%7</td></tr>"
+                        "<tr><td><b>Categories:</b></td><td>%8</td></tr>"
+                        "<tr><td><b>Has Config:</b></td><td>%9</td></tr>"
+                        "</table>")
+                      .arg(fileInfo.fileName())
+                      .arg(appImagePath)
+                      .arg(QString::number(fileInfo.size() / (1024.0 * 1024.0), 'f', 2) + " MB")
+                      .arg(fileInfo.lastModified().toString(Qt::DefaultLocaleShortDate))
+                      .arg(desktopInfo.value("Name", "-"))
+                      .arg(desktopInfo.value("X-AppImage-Version", desktopInfo.value("Version", "-")))
+                      .arg(desktopInfo.value("Comment", "-"))
+                      .arg(desktopInfo.value("Categories", "-"))
+                      .arg(hasAppImageConfigFile(appImagePath) ? tr("Yes") : tr("No"));
+    
+    QMessageBox::information(this, tr("AppImage Details"), details);
+}
+
+void SettingsDialog::openAppImageLocation()
+{
+    QString appImagePath = getSelectedAppImagePath();
+    if (appImagePath.isEmpty()) {
+        return;
+    }
+
+    QFileInfo fileInfo(appImagePath);
+    QString dirPath = fileInfo.absolutePath();
+    
+    // Open the directory in the default file manager
+    QProcess::startDetached("xdg-open", QStringList() << dirPath);
 }
 
