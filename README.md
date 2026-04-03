@@ -41,6 +41,10 @@ A graphical management interface to view and manage all integrated AppImages, no
 - **Desktop Shortcuts**: Right-click to create desktop shortcuts for the current user
 - **Direct Launch**: Run AppImages with configured arguments
 - **Remove**: Completely remove AppImages and their configuration
+- **Search & Filter**: Quickly find AppImages by name, version, or path
+- **Metadata Display**: View AppImage details including file size, version, and modification date
+- **Open Location**: Open the AppImage's directory in your file manager
+- **Delete Config**: Remove custom configuration files while keeping the AppImage
 
 Access the manager through:
 - The "AppImage Manager" tab in AppImageLauncher Settings
